@@ -1,9 +1,15 @@
 # MIP-8 Emulator
 
+
 ## Usage
-```
-make args="assets\nop.bin"
-```
+### Installing Requirements
+- For Windows
+  1. Install [Tiny C Compiler](https://bellard.org/tcc/) and add it to *PATH*.
+  2. Install and add to *PATH* [GNU Make](https://gnuwin32.sourceforge.net/packages/make.htm).
+
+### Running
+Open command prompt and type `make args="assets\nop.bin"` to run the emulator.
+
 
 ## MIP-8 Overview
 Micro-instruction processor, MIP for short, is a fantasy 8-bit stack-based CPU designed for educational purposes.
