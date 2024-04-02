@@ -1,0 +1,7 @@
+# Files
+*.ignore
+*.bak
+
+# Folders
+.ignore/
+out/
