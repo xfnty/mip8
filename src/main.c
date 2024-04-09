@@ -35,18 +35,7 @@
 
 
 /* ----- Types ----- */
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
-typedef int8_t i8;
-typedef int16_t i16;
-typedef int32_t i32;
-typedef int64_t i64;
 
-struct slist_node_t {
-    struct slist_node_t* next;
-};
 
 struct bus_device_slist_node_t {
     struct slist_node_t node;
@@ -57,7 +46,7 @@ struct bus_device_slist_node_t {
     bool (*write)(u8 addr, u8 value);
 };
 
-typedef bool (*opcode_handler_f)(u8 opcode);
+typedef bool (*opcode_handler_f)();
 
 
 
@@ -72,15 +61,7 @@ static bool bus_write(u8 addr, u8 value);
 static bool ram_bus_device_read(u8 addr, u8* out);
 static bool ram_bus_device_write(u8 addr, u8 value);
 
-#define slist_foreach(head, it_type, it_name) for (it_type* it_name = (head); it_name; it_name = (it_type*)(((struct slist_node_t*)it_name)->next))
-inline void slist_add(struct slist_node_t **head, struct slist_node_t *new_node) {
-    new_node->next = *head;
-    *head = new_node;
-}
 
-bool op_illegal(u8 opcode);
-bool op_NOP(u8 opcode);
-bool op_HALT(u8 opcode);
 
 
 
@@ -122,7 +103,13 @@ int main(int argc, const char** argv) {
     };
     s_bus_device_list = &ram_device;
 
-    while (cpu_exec_next() && getchar() != 'q');
+    while (cpu_exec_next()) {
+        cpu_dump_state();
+        LOG("");
+
+        if (getchar() == 'q')
+            break;
+    }
 
     return 0;
 }
@@ -131,8 +118,11 @@ bool cpu_exec_next() {
     CHECK_RETURN_VALUE(((u64)s_cpu.PC) + 1 < s_progmem.size, false);
     u8 opcode = s_progmem.data[s_cpu.PC++];
 
-    if (!s_opcode_handlers[opcode])
-        return op_illegal(opcode);
+    if (!s_opcode_handlers[opcode]) {
+        LOG_ERROR("attempted to execute illegal opcode 0x%X", opcode);
+        cpu_dump_state();
+        return false;
+    }
 
     LOG("[0x%X] %s (0x%X)", s_cpu.PC, s_opcode_mnemonics[opcode], opcode);
     return s_opcode_handlers[opcode](opcode);
@@ -219,28 +209,71 @@ bool ram_bus_device_write(u8 addr, u8 value) {
     return true;
 }
 
-bool op_illegal(u8 opcode) {
-    LOG_ERROR("attempted to execute illegal opcode 0x%X", opcode);
-    cpu_dump_state();
-    return false;
-}
-
-bool op_NOP(u8 opcode) {
+bool op_PAS() {
+    s_cpu.DS[s_cpu.DSP++] = s_cpu.A;
     return true;
 }
 
-bool op_HALT(u8 opcode) {
-    LOG("Halted");
-    cpu_dump_state();
+bool op_PIS() {
+    u8 v = s_progmem.data[s_cpu.PC++];
+    s_cpu.DS[s_cpu.DSP++] = v;
+    return true;
+}
+
+bool op_PMS() {
+    u8 a = s_progmem.data[s_cpu.PC++];
+    u8 v = 0;
+    CHECK_PROPAGATE(bus_read(a, &v));
+    s_cpu.DS[s_cpu.DSP++] = v;
+    return true;
+}
+
+bool op_AND() {
+    u8 a = s_cpu.DS[--s_cpu.DSP];
+    u8 b = s_cpu.DS[--s_cpu.DSP];
+    s_cpu.DS[s_cpu.DSP++] = a & b;
+    return true;
+}
+
+bool op_OR() {
+    u8 a = s_cpu.DS[--s_cpu.DSP];
+    u8 b = s_cpu.DS[--s_cpu.DSP];
+    s_cpu.DS[s_cpu.DSP++] = a | b;
+    return true;
+}
+
+bool op_XOR() {
+    u8 a = s_cpu.DS[--s_cpu.DSP];
+    u8 b = s_cpu.DS[--s_cpu.DSP];
+    s_cpu.DS[s_cpu.DSP++] = a ^ b;
+    return true;
+}
+
+bool op_NOP() {
+    return true;
+}
+
+bool op_HALT() {
+    LOG("----- HALTED -----");
     return false;
 }
 
 static opcode_handler_f s_opcode_handlers[0x100] = {
     [0x00] = op_NOP,
     [0x01] = op_HALT,
+    [0x02] = op_PAS,
+    [0x03] = op_PIS,
+    [0x04] = op_AND,
+    [0x05] = op_OR,
+    [0x06] = op_XOR,
 };
 
 static const char* s_opcode_mnemonics[0x100] = {
     [0x00] = "NOP",
     [0x01] = "HALT",
+    [0x02] = "PAS",
+    [0x03] = "PIS",
+    [0x04] = "AND",
+    [0x05] = "OR",
+    [0x06] = "XOR",
 };

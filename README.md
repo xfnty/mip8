@@ -1,63 +1,66 @@
 # MIP-8 Emulator
 
-
-## Usage
-### Installing Requirements
-- For Windows
-  1. Install [Tiny C Compiler](https://bellard.org/tcc/) and add it to *PATH*.
-  2. Install and add to *PATH* [GNU Make](https://gnuwin32.sourceforge.net/packages/make.htm).
-
-### Running
-Open command prompt and type `make args="assets\nop.bin"` to run the emulator.
-
-
 ## MIP-8 Overview
-Micro-instruction processor, MIP for short, is a fantasy 8-bit stack-based CPU designed for educational purposes.
+Minimal instruction processor, MIP for short, is a fantasy 8-bit stack-based CPU.
+
+## Charachteristics
+- 8-bit address and data buses.
+- Up to 32 Kb of RAM.
+- Up to 16 Kb of NVRAM.
 
 ### CPU Specification
 - Registers:
   - **A**: 8-bit wide address register.
-  - **PC**: 8-bit wide program counter. Points to the next instruction in program memory.
+  - **F**: status register (**Z** - last calculated value was zero, **I** - interrupts are enabled)
+  - **IP**: 8-bit wide instruction pointer. Points to the instruction in program memory that is being executed.
   - **DS**: 32-byte long data stack. Top of the **DS** is referenced down below as **T**.
   - **RS**: 8-byte long return address stack.
-  - **DSP**: 5-bit wide data stack pointer. 
-  - **RSP**: 3-bit wide return stack pointer. 
+  - **DSS**: 5-bit wide data stack size register. 
+  - **RSS**: 3-bit wide return stack size register. 
+
 Both **DS** and **RS** grow upward.
 Program memory is not connected to the main memory, addressable by **A**.
 
 ### Instructions
-- Stack manipulations:
-  - `PSM` - fetch a word from memory pointed at by **A** and push it to **DS**.
-  - `PSI` - fetch a word pointed at by **IP** and push it to **DS**.
-  - `PSA` - push **A** to **DS**.
-  - `PLM` - pop **T** and write it to memory at address **A**.
-  - `PLA` - pop **T** into **A**.
+- ALU instructions:
+  - `AND` - pop two bytes from **DS**, logically multiply them and push the result back.
+  - `OR` - pop a and b; push a|b.
+  - `XOR` - pop a, b; push a^b.
+  - `ADD` - pop a, b; push a+b.
+  - `SUB` - pop a, b; push a-b.
+  - `INC` - increment **T**.
+  - `INCA` - increment **A**.
+  - `DEC` - decrement **T**.
+  - `DECA` - decrement **A**.
+  - Stack manipulations:
+  - `PUSH` - push byte from main memory at **A**.
+  - `PUSHI` - push memory[**A**], **A**++.
+  - `PUSHP` - push progmem[**PC**], **PC**++.
+  - `PUSHA` - push **A** to **DS**.
+  - `POP` - pop **T** and write it to memory at address **A**.
+  - `POPA` - pop **T** into **A**.
   - `DUP` - push **T**.
   - `OVER` - push **DS**\[**DSP**-2\].
   - `DROP` - decrease **DSP**.
+- Branching:
+  - `JUMP` - pop **T** into **IP**.
+  - `CMP` - compare two values on the stack.
+  - `JZR` - set **IP** to next byte if **Z** is set.
+  - `JNZ` - set **IP** to next byte if **Z** is not set.
 - Calling subroutines:
-  - `JZ` - set **IP** to the most-significant half of the current word if **T** is zero.
-  - `CALL` - push **IP** to **RS**, set **IP** to value from memory previously pointed at by **IP**.
-  - `RET` - pop **RS** into **IP**.
-- ALU instructions:
-  - `XOR` - pop two values from **DS** and XOR them and push the result back.
-  - `OR` - pop a and b, push a | b.
-  - `AND` - pop a and b, push a & b.
-  - `ADD` - pop a and b, push a + b.
-  - `INCA` - add 1 to **A**.
+  - `CALL` - push **IP** to **RS**, set **IP** to the next byte in memory.
+  - `RET` - pop **RS** into **IP**, add 2 to **IP**.
 - Other:
   - `NOP` - do nothing.
   - `HALT` - stop the execution.
-
-### Program Memory Layout
-- `0x00:0xFF` - all program memory,
+  - `BRK` - break into a debugger or halt.
 
 ### Main Memory Layout
-- `0x00:0x7F` - switchable RAM page.
-- `0x80` - RAM page index.
-
-
-## TODO:
-- [ ] Refine instruction set
-- [ ] Add interrupts for input device
-- [ ] Add silent mode (only IO is visible) and better crash report
+- `00:7F` (128) - switchable RAM page.
+- `80` - RAM page index.
+- `81:C0` (64) - NVRAM page.
+- `C1` - NVRAM page index.
+- `C2` - Timer Period.
+- `C3` - Timer Counter.
+- `C4` - Timer overflow interrupt address.
+- `C5:FF` (60) - Unused.
