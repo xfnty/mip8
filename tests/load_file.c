@@ -5,8 +5,9 @@
 
 int main(int argc, char const *argv[]) {
     u64 size = 0;
-    u8* f = load_file("assets/lorem.txt", &size);
-    ASSERT_NEQ(f, NULL);
-    ASSERT_STREQ(f, "Lorem ipsum");
-    SUCCEED();
+    u8* text = NULL;
+    err_t err = load_file("assets/lorem.txt", &text, &size);
+    TEST_ASSERT_LOG(err.succeded, "load_file(): %s", err.description);
+    TEST_ASSERT_STREQ(text, "Lorem ipsum");
+    TEST_SUCCEED();
 }

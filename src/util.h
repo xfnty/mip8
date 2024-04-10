@@ -9,6 +9,35 @@
 #include <stdlib.h>
 #include <stdbool.h>
 
+
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+typedef int8_t i8;
+typedef int16_t i16;
+typedef int32_t i32;
+typedef int64_t i64;
+
+typedef struct err_t {
+    bool succeded;
+    const char *description;
+} err_t;
+
+#define err_success() ((err_t){ .succeded = true })
+err_t err_format(const char *fmt, ...);
+err_t err_format_errno(const char *prefix);
+
+struct slist_node_t {
+    struct slist_node_t* next;
+};
+
+#define slist_foreach(head, it_type, it_name) for (it_type *it_name = (head); it_name; it_name = (it_type*)(((struct slist_node_t*)it_name)->next))
+void slist_add(struct slist_node_t **head, struct slist_node_t *new_node);
+
+err_t load_file(const char *path, u8 **data, u64 *size);
+
+
 #define LENGTH(array) (sizeof(array)/sizeof(array[0]))
 #define MAX(a, b) ((a > b) ? (a) : (b))
 #define MIN(a, b) ((a < b) ? (a) : (b))
@@ -31,24 +60,5 @@
 #define CHECK_PROPAGATE(cond)                                    do { bool _res = (cond); if (!_res) return _res; } while(0)
 #define CHECK_GOTO(cond, label)                                  do { if (!(cond)) goto label; } while(0)
 #define CHECK_SET_RESULT_GOTO(cond, var, value, label)           do { if (!(cond)) { (var) = (value); goto label; } } while(0)
-
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
-typedef int8_t i8;
-typedef int16_t i16;
-typedef int32_t i32;
-typedef int64_t i64;
-
-struct slist_node_t {
-    struct slist_node_t* next;
-};
-
-#define slist_foreach(head, it_type, it_name) for (it_type* it_name = (head); it_name; it_name = (it_type*)(((struct slist_node_t*)it_name)->next))
-extern void slist_add(struct slist_node_t **head, struct slist_node_t *new_node);
-
-extern u8* load_file(const char *path, u64 *size);
-
 
 #endif

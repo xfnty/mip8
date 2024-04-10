@@ -4,5 +4,5 @@
 
 
 int main(int argc, char const *argv[]) {
-    SUCCEED();
+    TEST_SUCCEED();
 }
