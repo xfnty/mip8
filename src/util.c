@@ -27,13 +27,12 @@ err_t load_file(const char *path, u8 **data, u64 *size) {
     i64 actual_file_size = ftell(file);
     rewind(file);
     CHECK_RETURN_VALUE(actual_file_size >= 0, err_format_errno("could not get file size"));
-    *size = actual_file_size + 1;  // account for '\0' at the end
+    *size = actual_file_size;
     *data = malloc(*size);
 
     u64 bytes_read = fread(*data, 1, actual_file_size, file);
     CHECK_RETURN_VALUE(ferror(file) == 0, err_format_errno("fread()"));
     CHECK_RETURN_VALUE(bytes_read == actual_file_size, err_format_errno("could not read the file completely"));
-    (*data)[bytes_read] = '\0';
 
     return err_success();
 }

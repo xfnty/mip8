@@ -1,6 +1,24 @@
 # MIP-8 Emulator
 
-## MIP-8 Overview
+## Usage
+
+<details>
+    <summary>Dependencies</summary>
+    <ul>
+        <li><a href="https://gnuwin32.sourceforge.net/packages/make.htm">GNU Make for Windows</a></li>
+        <li><a href="https://www.bellard.org/tcc/">Tiny C compiler</a></li>
+    </ul>
+</details>
+
+- Building and running: `make`
+- Running with arguments: `make args="assets\fibonacci.bin"`
+
+Command line arguments:
+- `-i` - Execute program interactively.
+- `-p` - Print disassembly.
+- `<rom>` - Program ROM file.
+
+## Overview
 Minimal instruction processor, MIP for short, is a fantasy 8-bit stack-based CPU.
 
 ## Charachteristics
@@ -11,7 +29,7 @@ Minimal instruction processor, MIP for short, is a fantasy 8-bit stack-based CPU
 ### CPU Specification
 - Registers:
   - **A**: 8-bit wide address register.
-  - **F**: status register (**Z** - last calculated value was zero, **I** - interrupts are enabled)
+  - **F**: status register (**Z** - last calculated value was zero, **O** - **T** overflow happened).
   - **IP**: 8-bit wide instruction pointer. Points to the instruction in program memory that is being executed.
   - **DS**: 32-byte long data stack. Top of the **DS** is referenced down below as **T**.
   - **RS**: 8-byte long return address stack.
@@ -27,12 +45,7 @@ Program memory is not connected to the main memory, addressable by **A**.
   - `OR` - pop a and b; push a|b.
   - `XOR` - pop a, b; push a^b.
   - `ADD` - pop a, b; push a+b.
-  - `SUB` - pop a, b; push a-b.
-  - `INC` - increment **T**.
-  - `INCA` - increment **A**.
-  - `DEC` - decrement **T**.
-  - `DECA` - decrement **A**.
-  - Stack manipulations:
+- Stack manipulations:
   - `PUSH` - push byte from main memory at **A**.
   - `PUSHI` - push memory[**A**], **A**++.
   - `PUSHP` - push progmem[**PC**], **PC**++.
@@ -46,14 +59,13 @@ Program memory is not connected to the main memory, addressable by **A**.
   - `JUMP` - pop **T** into **IP**.
   - `CMP` - compare two values on the stack.
   - `JZR` - set **IP** to next byte if **Z** is set.
-  - `JNZ` - set **IP** to next byte if **Z** is not set.
+  - `JOV` - set **IP** to next byte if **O** is set.
 - Calling subroutines:
   - `CALL` - push **IP** to **RS**, set **IP** to the next byte in memory.
   - `RET` - pop **RS** into **IP**, add 2 to **IP**.
 - Other:
   - `NOP` - do nothing.
   - `HALT` - stop the execution.
-  - `BRK` - break into a debugger or halt.
 
 ### Main Memory Layout
 - `00:7F` (128) - switchable RAM page.

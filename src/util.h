@@ -60,5 +60,7 @@ err_t load_file(const char *path, u8 **data, u64 *size);
 #define CHECK_PROPAGATE(cond)                                    do { bool _res = (cond); if (!_res) return _res; } while(0)
 #define CHECK_GOTO(cond, label)                                  do { if (!(cond)) goto label; } while(0)
 #define CHECK_SET_RESULT_GOTO(cond, var, value, label)           do { if (!(cond)) { (var) = (value); goto label; } } while(0)
+#define CHECK_ERR_LOG_RETURN_VALUE(err, val)                     do { err_t e = (err); if (!e.succeded) { LOG_ERROR("%s", e.description); return (val);} } while(0)
+#define CHECK_ERR_PROPAGATE(err)                                 do { err_t e = (err); if (!e.succeded) return e; } while(0)
 
 #endif
