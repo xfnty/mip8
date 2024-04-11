@@ -18,6 +18,8 @@ Command line arguments:
 - `-p` - Print disassembly.
 - `<rom>` - Program ROM file.
 
+<img width="75%" src=".github/screenshot.png" />
+
 ## Overview
 Minimal instruction processor, MIP for short, is a fantasy 8-bit stack-based CPU.
 
