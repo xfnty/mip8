@@ -47,6 +47,7 @@ err_t load_file(const char *path, u8 **data, u64 *size);
 #define LOG_SUCCESS(fmt, ...)   printf("\e[1;92mok\e[1;97m: " fmt "\e[0m\n", ##__VA_ARGS__)
 #define LOG_ERROR(fmt, ...)     printf("\e[1;91merror\e[1;97m: " fmt "\e[0m (At %s:%d:%s())\e[0m\n", ##__VA_ARGS__, __FILE__, __LINE__, __func__)
 
+#define UNREACHABLE()                                            do { LOG_ERROR("reached unreachable section"); abort(); } while(0)
 #define ASSERT(cond)                                             do { if (!(cond)) { LOG_ERROR("assertion \"%s\" failed", #cond); abort(); } } while(0)
 #define __ASSERT_LOG_BOILERPLATE(expr, log_macro, fmt, end, ...) do { if (!(expr)) { log_macro(fmt, ##__VA_ARGS__); end; } } while(0)
 #define ASSERT_LOG(cond, fmt, ...)                               __ASSERT_LOG_BOILERPLATE(cond, LOG_ERROR, fmt, abort(), ##__VA_ARGS__)

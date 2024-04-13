@@ -31,6 +31,7 @@ Minimal instruction processor, MIP for short, is a fantasy 8-bit stack-based CPU
   - **A**: 8-bit wide address register.
   - **F**: status register (**Z** - last calculated value was zero, **O** - **T** overflow happened).
   - **IP**: 8-bit wide instruction pointer. Points to the instruction in program memory that is being executed.
+  - **IRA**: 8-bit wide interrupt return address. Points to the instruction that was being executed when the interrupt happened.
   - **DS**: 32-byte long data stack. Top of the **DS** is referenced down below as **T**.
   - **RS**: 8-byte long return address stack.
   - **DSS**: 5-bit wide data stack size register. 
@@ -52,6 +53,7 @@ Program memory is not connected to the main memory, addressable by **A**.
   - `PUSHA` - push **A** to **DS**.
   - `POP` - pop **T** and write it to memory at address **A**.
   - `POPA` - pop **T** into **A**.
+  - `POPI` - pop **T** into **A** and increase **A**.
   - `DUP` - push **T**.
   - `OVER` - push **DS**\[**DSP**-2\].
   - `DROP` - decrease **DSP**.
@@ -63,6 +65,9 @@ Program memory is not connected to the main memory, addressable by **A**.
 - Calling subroutines:
   - `CALL` - push **IP** to **RS**, set **IP** to the next byte in memory.
   - `RET` - pop **RS** into **IP**, add 2 to **IP**.
+  - `RETI` - return from an interrupt.
+  - `SEI` - Enable interrupts.
+  - `CLI` - Disable interrupts.
 - Other:
   - `NOP` - do nothing.
   - `HALT` - stop the execution.
@@ -75,4 +80,5 @@ Program memory is not connected to the main memory, addressable by **A**.
 - `C2` - Timer Period.
 - `C3` - Timer Counter.
 - `C4` - Timer overflow interrupt address.
-- `C5:FF` (60) - Unused.
+- `C5:FB` (56) - Unused.
+- `FC:FF` - Debug port.

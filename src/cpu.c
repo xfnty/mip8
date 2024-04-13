@@ -11,6 +11,7 @@ err_t PUSHP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t PUSHA(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t POP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t POPA(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
+err_t POPI(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t DUP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t OVER(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t DROP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
@@ -20,6 +21,9 @@ err_t JZR(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t JOV(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t CALL(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t RET(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
+err_t RETI(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
+err_t SEI(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
+err_t CLI(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t NOP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t HALT(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 
@@ -36,6 +40,7 @@ extern const struct cpu_opcode_t g_cpu_opcode_table[0x100] = {
     [OP_PUSHA] = { "PUSHA", "Push A to the stack",                                   1, PUSHA },
     [OP_POP]   = { "POP",   "Pop value from the stack to memory at A",               1, POP },
     [OP_POPA]  = { "POPA",  "Pop value into A",                                      1, POPA },
+    [OP_POPI]  = { "POPI",  "Pop value from the stack to memory at A, add 1 to A",   1, POPI },
     [OP_DUP]   = { "DUP",   "Duplicate value on top of the stack",                   1, DUP },
     [OP_OVER]  = { "OVER",  "Duplicate second topmost value on the stack",           1, OVER },
     [OP_DROP]  = { "DROP",  "Drop value on top of the stack",                        1, DROP },
@@ -45,6 +50,9 @@ extern const struct cpu_opcode_t g_cpu_opcode_table[0x100] = {
     [OP_JOV]   = { "JOV",   "Jump if Overflow flag is set",                          2, JOV },
     [OP_CALL]  = { "CALL",  "Push IP to RS then copy next byte into IP",             2, CALL },
     [OP_RET]   = { "RET",   "Pop value from RS into IP then add 2 to IP",            1, RET },
+    [OP_RETI]  = { "RETI",  "Return from an interrupt",                              1, RETI },
+    [OP_SEI]   = { "SEI",   "Set Interrupts Enabled flag",                           1, SEI },
+    [OP_CLI]   = { "CLI",   "Clear Interrupts Enabled flag",                         1, CLI },
 };
 
 err_t cpu_load_program_memory_from_file(struct cpu_t *cpu, const char *path) {
@@ -64,22 +72,33 @@ err_t cpu_load_program_memory_from_file(struct cpu_t *cpu, const char *path) {
 
 err_t cpu_exec_all(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
     err_t err;
-    while ((err = cpu_exec_next(cpu, bus)).succeded);
+    while ((err = cpu_exec_next(cpu, bus)).succeded && !cpu->registers.F.H);
     return err;
 }
 
 err_t cpu_exec_next(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
     assert(cpu != NULL);
     assert(bus != NULL);
+    CHECK_RETURN_VALUE(!cpu->registers.F.H, err_format("attempted to execute next instruction on halted CPU"));
     u8 opcode = cpu->program_memory[cpu->registers.IP];
     CHECK_RETURN_VALUE(g_cpu_opcode_table[opcode].exec != NULL, err_format("unknown opcode 0x%X", opcode));
     CHECK_ERR_PROPAGATE(g_cpu_opcode_table[opcode].exec(cpu, bus));
     return err_success();
 }
 
+err_t cpu_interrupt(struct cpu_t *cpu, struct bus_device_slist_node_t *bus, u8 addr) {
+    assert(cpu != NULL);
+    assert(bus != NULL);
+    CHECK_RETURN_VALUE(!cpu->registers.F.H, err_format("attempted to execute next instruction on halted CPU"));
+    CHECK_RETURN_VALUE(cpu->registers.F.I, err_success());
+    cpu->registers.IRA = cpu->registers.IP;
+    cpu->registers.IP = addr;
+    return err_success();
+}
+
 void cpu_dump_state(const struct cpu_t *cpu) {
     LOG("----- CPU state -----");
-    LOG("A=0x%X  IP=0x%X  Z=%d  O=%d", cpu->registers.A, cpu->registers.IP, cpu->registers.F.Z, cpu->registers.F.O);
+    LOG("A=0x%X  IP=0x%X  Z=%d  O=%d  H=%d  I=%d", cpu->registers.A, cpu->registers.IP, cpu->registers.F.Z, cpu->registers.F.O, cpu->registers.F.H, cpu->registers.F.I);
     LOG("DSS=%X  RSS=%X", cpu->registers.DSS, cpu->registers.RSS);
     printf("DS=[");
     for (int i = 0; i < cpu->registers.DSS; i++)
@@ -218,6 +237,12 @@ err_t POPA(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
     return err_success();
 }
 
+err_t POPI(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
+    CHECK_ERR_PROPAGATE(POPA(cpu, bus));
+    cpu->registers.A++;
+    return err_success();
+}
+
 err_t DUP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
     assert(cpu != NULL);
     assert(bus != NULL);
@@ -304,6 +329,27 @@ err_t RET(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
     return err_success();
 }
 
+err_t RETI(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
+    assert(cpu != NULL);
+    assert(bus != NULL);
+    cpu->registers.IP = cpu->registers.IRA;
+    return err_success();
+}
+
+err_t SEI(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
+    assert(cpu != NULL);
+    assert(bus != NULL);
+    cpu->registers.F.I = 1;
+    return err_success();
+}
+
+err_t CLI(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
+    assert(cpu != NULL);
+    assert(bus != NULL);
+    cpu->registers.F.I = 0;
+    return err_success();
+}
+
 err_t NOP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
     assert(cpu != NULL);
     assert(bus != NULL);
@@ -314,6 +360,6 @@ err_t NOP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
 err_t HALT(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
     assert(cpu != NULL);
     assert(bus != NULL);
-    return err_format("halted");
+    cpu->registers.F.H = 1;
+    return err_success();
 }
-
