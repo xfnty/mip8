@@ -22,11 +22,16 @@ typedef int64_t i64;
 typedef struct err_t {
     bool succeded;
     const char *description;
+    const char *source;
+    int line;
+    const char *func;
 } err_t;
 
 #define err_success() ((err_t){ .succeded = true })
-err_t err_format(const char *fmt, ...);
-err_t err_format_errno(const char *prefix);
+#define err_format(fmt, ...) _err_format(__FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
+#define err_format_errno(fmt, ...) _err_format_errno(__FILE__, __LINE__, __func__, fmt, ##__VA_ARGS__)
+err_t _err_format(const char *source, int line, const char *func, const char *fmt, ...);
+err_t _err_format_errno(const char *source, int line, const char *func, const char *fmt, ...);
 
 struct slist_node_t {
     struct slist_node_t* next;
@@ -61,7 +66,7 @@ err_t load_file(const char *path, u8 **data, u64 *size);
 #define CHECK_PROPAGATE(cond)                                    do { bool _res = (cond); if (!_res) return _res; } while(0)
 #define CHECK_GOTO(cond, label)                                  do { if (!(cond)) goto label; } while(0)
 #define CHECK_SET_RESULT_GOTO(cond, var, value, label)           do { if (!(cond)) { (var) = (value); goto label; } } while(0)
-#define CHECK_ERR_LOG_RETURN_VALUE(err, val)                     do { err_t e = (err); if (!e.succeded) { LOG_ERROR("%s", e.description); return (val);} } while(0)
+#define CHECK_ERR_LOG_RETURN_VALUE(err, val)                     do { err_t e = (err); if (!e.succeded) { LOG_ERROR("%s At %s:%d:%s()", e.description, e.source, e.line, e.func); return (val);} } while(0)
 #define CHECK_ERR_PROPAGATE(err)                                 do { err_t e = (err); if (!e.succeded) return e; } while(0)
 
 #endif

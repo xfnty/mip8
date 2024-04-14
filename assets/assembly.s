@@ -7,31 +7,31 @@
 ;   `.name` - evaluates to the labels address
 ;   `$xx` - evaluates to a single byte
 
-#nop $00
-#halt $01
-#and $02
-#or $03
-#xor $04
-#add $05
-#psh $06
-#psi $07
-#psp $08
-#psa $09
-#pop $0A
-#ppa $0B
-#ppi $0C
-#dup $0D
-#over $0E
-#drop $0F
-#jmp $10
-#cmp $11
-#jzr $12
-#jvf $13
-#call $14
-#ret $15
-#rti $16
-#sei $17
-#cli $18
+#nop=$00
+#halt=$01
+#and=$02
+#or=$03
+#xor=$04
+#add=$05
+#psh=$06
+#psi=$07
+#psp=$08
+#psa=$09
+#pop=$0A
+#ppa=$0B
+#ppi=$0C
+#dup=$0D
+#over=$0E
+#drop=$0F
+#jmp=$10
+#cmp=$11
+#jzr=$12
+#jvf=$13
+#call=$14
+#ret=$15
+#rti=$16
+#sei=$17
+#cli=$18
 
 #io_port=$C3
 

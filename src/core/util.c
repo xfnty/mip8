@@ -37,7 +37,7 @@ err_t load_file(const char *path, u8 **data, u64 *size) {
     return err_success();
 }
 
-err_t err_format(const char *fmt, ...) {
+err_t _err_format(const char *source, int line, const char *func, const char *fmt, ...) {
     static char description_buffer[512] = {'\0'};
 
     va_list args;
@@ -45,9 +45,17 @@ err_t err_format(const char *fmt, ...) {
     vsnprintf(description_buffer, sizeof(description_buffer), fmt, args);
     va_end(args);
 
-    return (err_t){ .succeded = false, .description = description_buffer };
+    return (err_t){ .succeded = false, .description = description_buffer, .source = source, .line = line, .func = func };
+
 }
 
-err_t err_format_errno(const char *prefix) {
-    return err_format("%s: %s [%d]", prefix, strerror(errno), errno);
+err_t _err_format_errno(const char *source, int line, const char *func, const char *fmt, ...) {
+    static char description_buffer[512] = {'\0'};
+
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(description_buffer, sizeof(description_buffer), fmt, args);
+    va_end(args);
+
+    return _err_format(source, line, func, "%s (%s) [%d]", description_buffer, strerror(errno), errno);
 }

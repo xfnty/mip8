@@ -3,24 +3,30 @@ MAKEFLAGS=--no-print-directory --quiet
 rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
 
 CFLAGS:=-Wall -Werror -LC:\\Binaries\\tcc\\lib -IC:\\Binaries\\tcc\\include -std=c99 -Isrc
+
 OUTPUT_DIR:=out
 TEST_OUTPUT_DIR:=tests-out
-OUTPUT_BIN:=$(OUTPUT_DIR)\\mip8.exe
-MAIN_SOURCE:=src/main.c
-SOURCES:=$(filter-out $(MAIN_SOURCE),$(call rwildcard,src,*.c))
+
+APP_SOURCES:=$(wildcard src/*.c)
+app_name=$(notdir $(basename $1))
+app_exe=$(OUTPUT_DIR)\\$(call app_name,$1).exe
+APPS=$(foreach s,$(APP_SOURCES),$(call app_name,$(s)))
+
+COMMON_SOURCES:=$(filter-out $(APP_SOURCES),$(call rwildcard,src,*.c))
 TEST_SOURCES:=$(call rwildcard,tests,*.c)
 
 args?=
 
-default: build run
+default:
+	echo Run "make <app>" to build and run the program.
+	echo Available programs are: $(APPS)
 
-build: $(OUTPUT_DIR)
+$(APP_SOURCES): $(OUTPUT_DIR)
 	xcopy /e /c /q /r /y assets out\\assets\\ > nul 2>&1 || (exit 0)
-	tcc $(CFLAGS) $(MAIN_SOURCE) $(SOURCES) -o $(OUTPUT_BIN)
+	tcc $(CFLAGS) $(COMMON_SOURCES) $@ -o $(call app_exe,$@)
 
-run: $(OUTPUT_DIR)
-	xcopy /e /c /q /r /y assets out\\assets\\ > nul 2>&1 || (exit 0)
-	$(OUTPUT_BIN) $(args)
+$(APPS): $(APP_SOURCES)  # FIXME: build only the required app source file
+	$(call app_exe,$@) $(args)
 
 test: $(TEST_OUTPUT_DIR) $(TEST_SOURCES)
 	xcopy /e /c /q /r /y assets out\\assets\\ > nul 2>&1 || (exit 0)
@@ -38,7 +44,7 @@ $(TEST_OUTPUT_DIR):
 	xcopy /e /c /q /r /y assets $(TEST_OUTPUT_DIR)\\assets\\ > nul 2>&1 || (exit 0)
 
 $(TEST_SOURCES):
-	tcc $(CFLAGS) -Itests $@ $(SOURCES) -o $(TEST_OUTPUT_DIR)\\$(basename $(notdir $@)).exe
+	tcc $(CFLAGS) -Itests $@ $(COMMON_SOURCES) -o $(TEST_OUTPUT_DIR)\\$(basename $(notdir $@)).exe
 	$(TEST_OUTPUT_DIR)\\$(basename $(notdir $@)).exe
 
-.PHONY: default build run test clean $(TEST_SOURCES)
+.PHONY: default build run test clean $(APP_SOURCES) $(TEST_SOURCES)

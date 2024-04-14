@@ -1,6 +1,6 @@
-#include <cpu.h>
-#include <bus.h>
-#include <util.h>
+#include <core/cpu.h>
+#include <core/bus.h>
+#include <core/util.h>
 
 #include "test.h"
 
