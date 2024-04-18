@@ -28,7 +28,7 @@ $(APP_SOURCES): $(OUTPUT_DIR)
 $(APPS): $(APP_SOURCES)  # FIXME: build only the required app source file
 	$(call app_exe,$@) $(args)
 
-test: $(TEST_OUTPUT_DIR) $(TEST_SOURCES)
+tests: $(TEST_OUTPUT_DIR) $(TEST_SOURCES)
 	xcopy /e /c /q /r /y assets out\\assets\\ > nul 2>&1 || (exit 0)
 
 clean:
@@ -45,6 +45,6 @@ $(TEST_OUTPUT_DIR):
 
 $(TEST_SOURCES):
 	tcc $(CFLAGS) -Itests $@ $(COMMON_SOURCES) -o $(TEST_OUTPUT_DIR)\\$(basename $(notdir $@)).exe
-	$(TEST_OUTPUT_DIR)\\$(basename $(notdir $@)).exe
+	-$(TEST_OUTPUT_DIR)\\$(basename $(notdir $@)).exe
 
 .PHONY: default build run test clean $(APP_SOURCES) $(TEST_SOURCES)

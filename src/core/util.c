@@ -13,12 +13,17 @@ void slist_add(struct slist_node_t **head, struct slist_node_t *new_node) {
     *head = new_node;
 }
 
-err_t load_file(const char *path, u8 **data, u64 *size) {
-    assert(path != NULL);
-    assert(data != NULL);
-    assert(size != NULL);
+// FNV1A: https://create.stephan-brumme.com/fnv-hash/
+u32 hash(const u8 *buf, u64 len) {
+    u32 hash = 0x811C9DC5;
+    while (len > 0)
+        hash = (buf[--len] ^ hash) * 16777619;
+    return hash;
+}
 
-    *size = 0;
+err_t read_file(const char *path, buffer_t *out_buffer) {
+    assert(path != NULL);
+    assert(out_buffer != NULL);
 
     FILE* file = fopen(path, "rb");
     CHECK_RETURN_VALUE(file, err_format_errno("fopen()"));
@@ -27,12 +32,25 @@ err_t load_file(const char *path, u8 **data, u64 *size) {
     i64 actual_file_size = ftell(file);
     rewind(file);
     CHECK_RETURN_VALUE(actual_file_size >= 0, err_format_errno("could not get file size"));
-    *size = actual_file_size;
-    *data = malloc(*size);
+    arr_resize(*out_buffer, actual_file_size);
 
-    u64 bytes_read = fread(*data, 1, actual_file_size, file);
+    u64 bytes_read = fread(out_buffer->data, 1, out_buffer->size, file);
     CHECK_RETURN_VALUE(ferror(file) == 0, err_format_errno("fread()"));
     CHECK_RETURN_VALUE(bytes_read == actual_file_size, err_format_errno("could not read the file completely"));
+
+    return err_success();
+}
+
+err_t write_file(const char *path, const buffer_t *buffer) {
+    assert(path != NULL);
+    assert(buffer != NULL);
+
+    FILE* file = fopen(path, "wb");
+    CHECK_RETURN_VALUE(file, err_format_errno("fopen()"));
+
+    u64 bytes_written = fwrite(buffer->data, 1, buffer->size, file);
+    CHECK_RETURN_VALUE(ferror(file) == 0, err_format_errno("fwrite()"));
+    CHECK_RETURN_VALUE(bytes_written == buffer->size, err_format_errno("could not write the file completely"));
 
     return err_success();
 }
@@ -57,5 +75,5 @@ err_t _err_format_errno(const char *source, int line, const char *func, const ch
     vsnprintf(description_buffer, sizeof(description_buffer), fmt, args);
     va_end(args);
 
-    return _err_format(source, line, func, "%s (%s) [%d]", description_buffer, strerror(errno), errno);
+    return _err_format(source, line, func, "%s: %s [%d]", description_buffer, strerror(errno), errno);
 }

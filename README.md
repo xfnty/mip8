@@ -1,22 +1,27 @@
 # MIP-8 Emulator
 
-## Usage
-
 <details>
     <summary>Dependencies</summary>
     <ul>
         <li><a href="https://gnuwin32.sourceforge.net/packages/make.htm">GNU Make for Windows</a></li>
         <li><a href="https://www.bellard.org/tcc/">Tiny C compiler</a></li>
+        <li><a href="https://mh-nexus.de/en/hxd/">Hex Editor</a> (optional)</li>
     </ul>
 </details>
 
-- Building and running: `make`
-- Running with arguments: `make args="assets\fibonacci.bin"`
+<details>
+    <summary>TODO</summary>
 
-Command line arguments:
-- `-i` - Execute program interactively.
-- `-p` - Print disassembly.
-- `<rom>` - Program ROM file.
+- [ ] Add other bus devices (RAM, NVRAM, Timer, Debug port and others)
+- [ ] Fix tests
+- [ ] Combine `mip8vm` and `mip8asm` into one program.
+- [ ] Make better error messages in assembler.
+
+</details>
+
+## Usage
+To compile example assembly source file run `make mip8asm args="assets\fibonacci.s fibonacci.bin"`.
+THen run `make mip8vm args="-i fibonacci.bin"` to execute it.
 
 <img src=".github/screenshot.png" />
 

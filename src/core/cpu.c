@@ -28,44 +28,41 @@ err_t NOP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t HALT(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 
 extern const struct cpu_opcode_t g_cpu_opcode_table[0x100] = {
-    [OP_NOP]   = { "NOP",   "Do nothing",                                            1, NOP },
-    [OP_HALT]  = { "HALT",  "Stop the execution",                                    1, HALT },
-    [OP_AND]   = { "AND",   "Logical AND",                                           1, AND },
-    [OP_OR]    = { "OR",    "Logical OR",                                            1, OR },
-    [OP_XOR]   = { "XOR",   "Logical XOR",                                           1, XOR },
-    [OP_ADD]   = { "ADD",   "Add two values",                                        1, ADD },
-    [OP_PUSH]  = { "PUSH",  "Push value in memory at A",                             1, PUSH },
-    [OP_PUSHI] = { "PUSHI", "Push value in memory at A and increase A",              1, PUSHI },
-    [OP_PUSHP] = { "PUSHP", "Push next byte in program memory",                      2, PUSHP },
-    [OP_PUSHA] = { "PUSHA", "Push A to the stack",                                   1, PUSHA },
-    [OP_POP]   = { "POP",   "Pop value from the stack to memory at A",               1, POP },
-    [OP_POPA]  = { "POPA",  "Pop value into A",                                      1, POPA },
-    [OP_POPI]  = { "POPI",  "Pop value from the stack to memory at A, add 1 to A",   1, POPI },
-    [OP_DUP]   = { "DUP",   "Duplicate value on top of the stack",                   1, DUP },
-    [OP_OVER]  = { "OVER",  "Duplicate second topmost value on the stack",           1, OVER },
-    [OP_DROP]  = { "DROP",  "Drop value on top of the stack",                        1, DROP },
-    [OP_JUMP]  = { "JUMP",  "Copy next byte in program memory into IP",              2, JUMP },
-    [OP_CMP]   = { "CMP",   "Compare two values on the stack without removing them", 1, CMP },
-    [OP_JZR]   = { "JZR",   "Jump if Zero flag is set",                              2, JZR },
-    [OP_JOV]   = { "JOV",   "Jump if Overflow flag is set",                          2, JOV },
-    [OP_CALL]  = { "CALL",  "Push IP to RS then copy next byte into IP",             2, CALL },
-    [OP_RET]   = { "RET",   "Pop value from RS into IP then add 2 to IP",            1, RET },
-    [OP_RETI]  = { "RETI",  "Return from an interrupt",                              1, RETI },
-    [OP_SEI]   = { "SEI",   "Set Interrupts Enabled flag",                           1, SEI },
-    [OP_CLI]   = { "CLI",   "Clear Interrupts Enabled flag",                         1, CLI },
+    [OP_NOP]   = { "nop",   "Do nothing",                                            1, NOP },
+    [OP_HALT]  = { "halt",  "Stop the execution",                                    1, HALT },
+    [OP_AND]   = { "and",   "Logical AND",                                           1, AND },
+    [OP_OR]    = { "or",    "Logical OR",                                            1, OR },
+    [OP_XOR]   = { "xor",   "Logical XOR",                                           1, XOR },
+    [OP_ADD]   = { "add",   "Add two values",                                        1, ADD },
+    [OP_PUSH]  = { "psh",   "Push value in memory at A",                             1, PUSH },
+    [OP_PUSHI] = { "psi",   "Push value in memory at A and increase A",              1, PUSHI },
+    [OP_PUSHP] = { "psp",   "Push next byte in program memory",                      2, PUSHP },
+    [OP_PUSHA] = { "psa",   "Push A to the stack",                                   1, PUSHA },
+    [OP_POP]   = { "pop",   "Pop value from the stack to memory at A",               1, POP },
+    [OP_POPA]  = { "ppa",   "Pop value into A",                                      1, POPA },
+    [OP_POPI]  = { "ppi",   "Pop value from the stack to memory at A, add 1 to A",   1, POPI },
+    [OP_DUP]   = { "dup",   "Duplicate value on top of the stack",                   1, DUP },
+    [OP_OVER]  = { "over",  "Duplicate second topmost value on the stack",           1, OVER },
+    [OP_DROP]  = { "drop",  "Drop value on top of the stack",                        1, DROP },
+    [OP_JUMP]  = { "jmp",   "Copy next byte in program memory into IP",              2, JUMP },
+    [OP_CMP]   = { "cmp",   "Compare two values on the stack without removing them", 1, CMP },
+    [OP_JZR]   = { "jzr",   "Jump if Zero flag is set",                              2, JZR },
+    [OP_JOV]   = { "jvf",   "Jump if Overflow flag is set",                          2, JOV },
+    [OP_CALL]  = { "call",  "Push IP to RS then copy next byte into IP",             2, CALL },
+    [OP_RET]   = { "ret",   "Pop value from RS into IP then add 2 to IP",            1, RET },
+    [OP_RETI]  = { "rti",   "Return from an interrupt",                              1, RETI },
+    [OP_SEI]   = { "sei",   "Set Interrupts Enabled flag",                           1, SEI },
+    [OP_CLI]   = { "cli",   "Clear Interrupts Enabled flag",                         1, CLI },
 };
 
 err_t cpu_load_program_memory_from_file(struct cpu_t *cpu, const char *path) {
     assert(cpu != NULL);
     assert(path != NULL);
 
-    u64 file_size;
-    CHECK_ERR_PROPAGATE(load_file(path, &cpu->program_memory, &file_size));
-    CHECK_RETURN_VALUE(file_size > 1, err_format("given rom file is empty"));
-    CHECK_RETURN_VALUE(file_size <= 0x100, err_format("given rom file is too large"));
-    cpu->program_memory = realloc(cpu->program_memory, 0x100);
-    memset(cpu->program_memory + file_size, 0, 0x100 - file_size);
-    CHECK_RETURN_VALUE(cpu->program_memory != NULL, err_format_errno("realloc() failed"));
+    CHECK_ERR_PROPAGATE(read_file(path, &cpu->program_memory));
+    CHECK_RETURN_VALUE(cpu->program_memory.size > 1, err_format("given rom file is empty"));
+    CHECK_RETURN_VALUE(cpu->program_memory.size <= 0x100, err_format("given rom file is too large"));
+    arr_resize(cpu->program_memory, 0x100);
 
     return err_success();
 }
@@ -80,7 +77,7 @@ err_t cpu_exec_next(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
     assert(cpu != NULL);
     assert(bus != NULL);
     CHECK_RETURN_VALUE(!cpu->registers.F.H, err_format("attempted to execute next instruction on halted CPU"));
-    u8 opcode = cpu->program_memory[cpu->registers.IP];
+    u8 opcode = cpu->program_memory.data[cpu->registers.IP];
     CHECK_RETURN_VALUE(g_cpu_opcode_table[opcode].exec != NULL, err_format("unknown opcode 0x%X", opcode));
     CHECK_ERR_PROPAGATE(g_cpu_opcode_table[opcode].exec(cpu, bus));
     return err_success();
@@ -202,7 +199,7 @@ err_t PUSHI(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
 err_t PUSHP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
     assert(cpu != NULL);
     assert(bus != NULL);
-    CHECK_ERR_PROPAGATE(cpu_push(cpu, cpu->program_memory[cpu->registers.IP + 1]));
+    CHECK_ERR_PROPAGATE(cpu_push(cpu, cpu->program_memory.data[cpu->registers.IP + 1]));
     cpu->registers.F.Z = cpu->registers.DS[cpu->registers.DSS - 1] == 0;
     cpu->registers.F.O = 0;
     cpu->registers.IP += g_cpu_opcode_table[OP_PUSHP].length;
@@ -277,7 +274,7 @@ err_t DROP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
 err_t JUMP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
     assert(cpu != NULL);
     assert(bus != NULL);
-    u8 a = cpu->program_memory[cpu->registers.IP + 1];
+    u8 a = cpu->program_memory.data[cpu->registers.IP + 1];
     cpu->registers.IP = a;
     return err_success();
 }
@@ -314,7 +311,7 @@ err_t CALL(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
     assert(bus != NULL);
     CHECK_RETURN_VALUE(cpu->registers.RSS < 0x8, err_format("return stack overflow"));
     cpu->registers.RS[cpu->registers.RSS++] = cpu->registers.IP;
-    cpu->registers.IP = cpu->program_memory[cpu->registers.IP + 1];
+    cpu->registers.IP = cpu->program_memory.data[cpu->registers.IP + 1];
     return err_success();
 }
 
@@ -323,7 +320,7 @@ err_t RET(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
     assert(bus != NULL);
     CHECK_RETURN_VALUE(cpu->registers.RSS > 0, err_format("not enough values on return stack"));
     cpu->registers.IP = cpu->registers.RS[--cpu->registers.RSS];
-    u8 opcode = cpu->program_memory[cpu->registers.IP];
+    u8 opcode = cpu->program_memory.data[cpu->registers.IP];
     CHECK_RETURN_VALUE(g_cpu_opcode_table[opcode].exec != NULL, err_format("returned to unknown opcode 0x%X", opcode));
     cpu->registers.IP += g_cpu_opcode_table[opcode].length;
     return err_success();

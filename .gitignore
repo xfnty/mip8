@@ -1,6 +1,7 @@
 # Files
 *.ignore
 *.bak
+*.bin
 
 # Folders
 .ignore/

@@ -51,7 +51,7 @@ struct cpu_t {
         u8 DS[32];
         u8 RS[8];
     } registers;
-    u8 *program_memory;
+    buffer_t program_memory;
 };
 
 struct cpu_opcode_t {

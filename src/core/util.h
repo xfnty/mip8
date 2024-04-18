@@ -40,8 +40,26 @@ struct slist_node_t {
 #define slist_foreach(head, it_type, it_name) for (it_type *it_name = (head); it_name; it_name = (it_type*)(((struct slist_node_t*)it_name)->next))
 void slist_add(struct slist_node_t **head, struct slist_node_t *new_node);
 
-err_t load_file(const char *path, u8 **data, u64 *size);
+#define arr_t(T) struct { u64 size, capacity; T *data; }
+#define arr_resize(a, s) do { (a).data = realloc((a).data, sizeof((a).data[0]) * (s)); memset((a).data + (a).size, 0, (s) - (a).size); (a).size = (a).capacity = (s); }while(0)
+#define arr_assign(a, d, s) do { (a).data = (d); (a).size = (a).capacity = (s); }while(0)
+#define arr_clear(a) do { (a).size = 0; } while(0)
+#define arr_free(a) do { assert((a).data); free((a).data); (a).size = (a).capacity = 0; (a).data = NULL; } while(0)
+#define arr_push(a, x) do {                                                     \
+        if ((a).size == (a).capacity) {                                         \
+            (a).capacity = ((a).capacity) ? ((a).capacity << 2) : (1);          \
+            (a).data = realloc((a).data, sizeof((a).data[0]) * (a).capacity);   \
+        }                                                                       \
+        (a).data[(a).size++] = (x);                                             \
+    } while(0)
+#define arr_pop(a) ((a).data[--(a).size])
+#define arr_top(a) ((a).data[(a).size - 1])
 
+u32 hash(const u8 *buf, u64 len);
+
+typedef arr_t(u8) buffer_t;
+err_t read_file(const char *path, buffer_t *out_buffer);
+err_t write_file(const char *path, const buffer_t *buffer);
 
 #define LENGTH(array) (sizeof(array)/sizeof(array[0]))
 #define MAX(a, b) ((a > b) ? (a) : (b))
@@ -50,7 +68,7 @@ err_t load_file(const char *path, u8 **data, u64 *size);
 #define LOG(fmt, ...)           printf("\e[0m" fmt "\e[0m\n", ##__VA_ARGS__)
 #define LOG_NOTICE(fmt, ...)    printf("\e[1;97m" fmt "\e[0m\n", ##__VA_ARGS__)
 #define LOG_SUCCESS(fmt, ...)   printf("\e[1;92mok\e[1;97m: " fmt "\e[0m\n", ##__VA_ARGS__)
-#define LOG_ERROR(fmt, ...)     printf("\e[1;91merror\e[1;97m: " fmt "\e[0m (At %s:%d:%s())\e[0m\n", ##__VA_ARGS__, __FILE__, __LINE__, __func__)
+#define LOG_ERROR(fmt, ...)     printf("\e[1;91merror\e[1;97m: " fmt "\e[0m\n\tAt %s:%d:%s()\e[0m\n", ##__VA_ARGS__, __FILE__, __LINE__, __func__)
 
 #define UNREACHABLE()                                            do { LOG_ERROR("reached unreachable section"); abort(); } while(0)
 #define ASSERT(cond)                                             do { if (!(cond)) { LOG_ERROR("assertion \"%s\" failed", #cond); abort(); } } while(0)
@@ -66,7 +84,7 @@ err_t load_file(const char *path, u8 **data, u64 *size);
 #define CHECK_PROPAGATE(cond)                                    do { bool _res = (cond); if (!_res) return _res; } while(0)
 #define CHECK_GOTO(cond, label)                                  do { if (!(cond)) goto label; } while(0)
 #define CHECK_SET_RESULT_GOTO(cond, var, value, label)           do { if (!(cond)) { (var) = (value); goto label; } } while(0)
-#define CHECK_ERR_LOG_RETURN_VALUE(err, val)                     do { err_t e = (err); if (!e.succeded) { LOG_ERROR("%s At %s:%d:%s()", e.description, e.source, e.line, e.func); return (val);} } while(0)
+#define CHECK_ERR_LOG_RETURN_VALUE(err, val)                     do { err_t e = (err); if (!e.succeded) { LOG("\e[1;91merror\e[1;97m: %s\e[0m\n\tHappened in %s:%d:%s()\n\tCaught in %s:%d:%s()", e.description, e.source, e.line, e.func, __FILE__, __LINE__, __func__); return (val);} } while(0)
 #define CHECK_ERR_PROPAGATE(err)                                 do { err_t e = (err); if (!e.succeded) return e; } while(0)
 
 #endif

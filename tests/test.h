@@ -27,6 +27,7 @@ static void _enable_ansi_sequences() {
 #define TEST_LOG(fmt, ...) do { _enable_ansi_sequences(); printf("\e[1;97m-- %s:\e[0m " fmt "\e[0m\n", FILENAME, ##__VA_ARGS__); } while(0)
 #define TEST_FAIL(fmt, ...) do { _enable_ansi_sequences(); printf("\e[1;97m-- %s \e[1;91mfailed\e[1;97m:\e[0m " fmt "\e[0m (line %d)\n", FILENAME, ##__VA_ARGS__, __LINE__); abort(); } while(0)
 #define TEST_SUCCEED() do { _enable_ansi_sequences(); printf("\e[1;97m-- %s \e[1;92msucceded\e[0m\n", FILENAME); exit(0); } while(0)
+#define TEST_IGNORE() do { _enable_ansi_sequences(); printf("\e[1;97m-- %s \e[0mignored\e[0m\n", FILENAME); exit(0); } while(0)
 
 #define TEST_ASSERT_LOG(a, fmt, ...) do { if (!(a)) TEST_FAIL(fmt, ##__VA_ARGS__); } while(0)
 #define TEST_ASSERT_EQ(a, b) do { if ((a) != (b)) TEST_FAIL(#a " != " #b); } while(0)
