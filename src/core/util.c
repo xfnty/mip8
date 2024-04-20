@@ -8,10 +8,13 @@
 
 void slist_add(struct slist_node_t **head, struct slist_node_t *new_node) {
     assert(head != NULL);
-    assert(*head != NULL);
     assert(new_node != NULL);
-    new_node->next = *head;
-    *head = new_node;
+    if (*head == NULL) {
+        *head = new_node;
+    } else {
+        new_node->next = *head;
+        *head = new_node;
+    }
 }
 
 // FNV1A: https://create.stephan-brumme.com/fnv-hash/

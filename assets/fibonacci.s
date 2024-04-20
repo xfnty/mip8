@@ -37,7 +37,7 @@ start:
     psp $01
     dup dup dup
     ; Save IO port address into A
-    psp $00
+    psp $FF
     ppa
     ; Print first two numbers
     pop 
@@ -57,7 +57,7 @@ loop:
     psa
 
     ; Output current number
-    psp $00
+    psp $FF
     ppa
     over
     pop

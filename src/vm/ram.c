@@ -28,8 +28,6 @@ static err_t ram_write(struct bus_device_slist_node_t *dev, u8 addr, u8 value) {
     u8 *v = (addr == 0x80) ? (&(ram->page)) : (ram->data + (ram->page * 0xFF) + addr);
     *v = value;
 
-    LOG("RAM[0x%X] << 0x%X (%d)", (addr == 0x80) ? (ram->page) : ((ram->page * 0xFF) + addr), value, (int)value);
-
     return err_success();
 }
 

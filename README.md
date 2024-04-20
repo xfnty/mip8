@@ -84,5 +84,5 @@ Program memory is not connected to the main memory, addressable by **A**.
 - `C2` - Timer Period.
 - `C3` - Timer Counter.
 - `C4` - Timer overflow interrupt address.
-- `C5:FB` (56) - Unused.
-- `FC:FF` - Debug port.
+- `C5:FD` (58) - Unused.
+- `FE:FF` - Debug port (`FE` - ASCII character in/out, `FF` - number in/out).

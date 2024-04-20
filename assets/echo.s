@@ -33,7 +33,13 @@
 ;   cli  - Clear Interrupts Enabled flag.
 
 
-psp $02
-psp $02
-add
-halt
+loop:
+    psp $FE
+    ppa
+    psh
+
+    psp $FE
+    ppa
+    pop
+    
+    jmp .loop
