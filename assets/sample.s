@@ -33,26 +33,7 @@
 ;   cli  - Clear Interrupts Enabled flag.
 
 
-start:
-    psp $01
-    psp $02
-    call .sub
-    call .print
-    jmp .end
-
-end:
-    halt
-    
-print:
-    psp $00
-    ppa
-    pop
-    ret
-
-sub:
-    psp $FF
-    xor
-    psp $01
-    add
-    add
-    ret
+psp $02
+psp $02
+add
+halt

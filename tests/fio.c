@@ -4,10 +4,10 @@
 
 
 int main(int argc, char const *argv[]) {
-    u64 size = 0;
-    u8* text = NULL;
-    err_t err = read_file("assets/lorem.txt", &text, &size);
+    buffer_t buffer = {0};
+    err_t err = read_file("assets/lorem.txt", &buffer);
     TEST_ASSERT_LOG(err.succeded, "read_file(): %s", err.description);
-    TEST_ASSERT_STREQ(text, "Lorem ipsum");
+    arr_push(buffer, '\0');
+    TEST_ASSERT_STREQ(buffer.data, "Lorem ipsum");
     TEST_SUCCEED();
 }

@@ -13,7 +13,7 @@
     <summary>TODO</summary>
 
 - [ ] Add other bus devices (RAM, NVRAM, Timer, Debug port and others)
-- [ ] Fix tests
+- [x] Fix tests
 - [x] Combine `mip8vm` and `mip8asm` into one program.
 - [x] Make better error messages in assembler.
 

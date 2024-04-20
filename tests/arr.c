@@ -9,11 +9,11 @@ int main(int argc, char const *argv[]) {
     arr_push(a, 123);
     TEST_ASSERT_EQ(a.size, 1);
     TEST_ASSERT_EQ(a.capacity, 1);
-    TEST_ASSERT_EQ(arr_at(a, 0), 123);
+    TEST_ASSERT_EQ(a.data[0], 123);
     
     arr_push(a, 456);
     TEST_ASSERT_EQ(a.size, 2);
-    TEST_ASSERT_EQ(arr_at(a, 1), 456);
+    TEST_ASSERT_EQ(a.data[1], 456);
     
     int x = arr_pop(a);
     TEST_ASSERT_EQ(x, 456);
