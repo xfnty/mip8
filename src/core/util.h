@@ -43,6 +43,7 @@ void slist_add(struct slist_node_t **head, struct slist_node_t *new_node);
 #define arr_t(T) struct { u64 size, capacity; T *data; }
 #define arr_resize(a, s) do { (a).data = realloc((a).data, sizeof((a).data[0]) * (s)); memset((a).data + (a).size, 0, (s) - (a).size); (a).size = (a).capacity = (s); }while(0)
 #define arr_assign(a, d, s) do { (a).data = (d); (a).size = (a).capacity = (s); }while(0)
+#define arr_copy(a, d, s) do { (a).data = malloc(s); (a).size = (a).capacity = (s); memcpy((a).data, (d), (s)); }while(0)
 #define arr_clear(a) do { (a).size = 0; } while(0)
 #define arr_free(a) do { assert((a).data); free((a).data); (a).size = (a).capacity = 0; (a).data = NULL; } while(0)
 #define arr_push(a, x) do {                                                     \

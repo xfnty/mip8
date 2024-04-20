@@ -5,18 +5,19 @@
 #include "core/cpu.h"
 
 
+typedef arr_t(char) token_t;
+
 struct label_t {
+    token_t str;
     u32 hash;
     u8 addr;
 };
 
 struct alias_t {
-    const char *str;
+    token_t str;
     u32 hash;
     u8 value;
 };
-
-typedef arr_t(char) token_t;
 
 struct parser_context_t {
     u64             cursor_position;
@@ -60,9 +61,10 @@ void precompute_alias_hashes() {
             continue;
 
         struct alias_t a = {0};
-        a.str = g_cpu_opcode_table[i].mnemonic;
+        arr_assign(a.str, strdup(g_cpu_opcode_table[i].mnemonic), strlen(g_cpu_opcode_table[i].mnemonic));
+        arr_push(a.str, '\0');
         a.value = i;
-        a.hash = hash(a.str, strlen(a.str));
+        a.hash = hash(a.str.data, a.str.size - 1);
 
         arr_push(s_builtin_aliases, a);
     }
@@ -100,6 +102,8 @@ void skip_space_and_comments(struct parser_context_t *ctx) {
 }
 
 err_t resolve_label_references(struct parser_context_t *ctx) {
+    static arr_t(int) unresolved_label_indexes = {0};
+
     assert(ctx);
 
     for (int i = 0; i < ctx->unresolved_label_address_placeholders.size; i++) {
@@ -113,7 +117,21 @@ err_t resolve_label_references(struct parser_context_t *ctx) {
             }
         }
 
-        CHECK_RETURN_VALUE(found_match, err_format("could not resolve all label references"));
+        if (!found_match)
+            arr_push(unresolved_label_indexes, i);
+    }
+
+    if (unresolved_label_indexes.size > 0) {
+        char b[512] = {'\0'};
+        snprintf(b, sizeof(b), "could not resolve following label references: ");
+        for (int i = 0; i < unresolved_label_indexes.size; i++) {
+            struct label_t *l = &ctx->unresolved_label_address_placeholders.data[unresolved_label_indexes.data[i]];
+            arr_push(l->str, '\0');
+            snprintf(b, sizeof(b), "%s\"%s\"%s", b, l->str.data, (i < unresolved_label_indexes.size - 1) ? (", ") : (""));
+            arr_pop(l->str);
+        }
+        arr_clear(unresolved_label_indexes);
+        return err_format(b);
     }
 
     return err_success();
@@ -124,12 +142,10 @@ err_t try_process_token(struct parser_context_t *ctx, token_t *token) {
     assert(token);
 
     if (token->data[0] == '$') {
-        CHECK_RETURN_VALUE(
-            token->size == 3 
-            && isxdigit(token->data[1]) 
-            && isxdigit(token->data[2]),
-            err_format("invalid literal byte value")
-        );
+        if (token->size != 3 || !isxdigit(token->data[1]) || !isxdigit(token->data[2])) {
+            arr_push(*token, '\0');
+            return err_format("invalid literal byte value \"%s\"", token->data);
+        }
 
         static const u8 convertion_table[] = { [0] = 0, [1] = 1, [2] = 2, [3] = 3, [4] = 4, [5] = 5, [6] = 6, [7] = 7, [8] = 8, [9] = 9, [17] = 0xA, [18] = 0xB, [19] = 0xC, [20] = 0xD, [21] = 0xE, [22] = 0xF };
         arr_push(*(ctx->out_buffer), (convertion_table[token->data[2] - '0']) | (convertion_table[token->data[1] - '0']) << 4);
@@ -144,7 +160,9 @@ err_t try_process_token(struct parser_context_t *ctx, token_t *token) {
             }
         }
         
-        struct label_t l = (struct label_t){ .hash = h, .addr = ctx->out_buffer->size };
+        token_t s = {0};
+        arr_copy(s, &token->data[1], token->size - 1);
+        struct label_t l = (struct label_t){ .str = s, .hash = h, .addr = ctx->out_buffer->size };
         arr_push(ctx->unresolved_label_address_placeholders, l);
         arr_push(*(ctx->out_buffer), 0xAA);
         
@@ -153,10 +171,14 @@ err_t try_process_token(struct parser_context_t *ctx, token_t *token) {
         u32 h = hash(token->data, token->size - 1);
 
         for (u64 i = 0; i < ctx->labels.size; i++)
-            if (ctx->labels.data[i].hash == h)
-                return err_format("redifinition of a label");
+            if (ctx->labels.data[i].hash == h) {
+                token->data[token->size - 1] = '\0';
+                return err_format("redifinition of a label \"%s\"", token->data);
+            }
         
-        struct label_t l = (struct label_t){ .hash = h, .addr = ctx->out_buffer->size };
+        token_t s = {0};
+        arr_copy(s, token->data, token->size - 1);
+        struct label_t l = (struct label_t){ .str = s, .hash = h, .addr = ctx->out_buffer->size };
         arr_push(ctx->labels, l);
 
         return err_success();
@@ -171,5 +193,5 @@ err_t try_process_token(struct parser_context_t *ctx, token_t *token) {
     }
 
     arr_push(*token, '\0');
-    return err_format("could not parse token \"%s\" (%d)", token->data, token->size);
+    return err_format("could not parse token \"%s\"", token->data);
 }

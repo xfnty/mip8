@@ -14,8 +14,8 @@
 
 - [ ] Add other bus devices (RAM, NVRAM, Timer, Debug port and others)
 - [ ] Fix tests
-- [ ] Combine `mip8vm` and `mip8asm` into one program.
-- [ ] Make better error messages in assembler.
+- [x] Combine `mip8vm` and `mip8asm` into one program.
+- [x] Make better error messages in assembler.
 
 </details>
 

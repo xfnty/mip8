@@ -42,7 +42,7 @@ start:
 
 end:
     halt
-
+    
 print:
     psp $00
     ppa
