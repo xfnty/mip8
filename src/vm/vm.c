@@ -1,17 +1,24 @@
 #include "vm.h"
 
+#include <ctype.h>
 
+
+static bool s_verbose = true;
 static u8 ram_buffer[0x100];
 
 err_t ram_read(struct bus_device_slist_node_t *dev, u8 addr, u8* out) {
     *out = ram_buffer[addr];
-    LOG("RAM[0x%X] >> 0x%X", addr, *out);
+    if (s_verbose)
+        LOG("RAM[0x%X] >> 0x%X", addr, *out);
     return err_success();
 }
 
 err_t ram_write(struct bus_device_slist_node_t *dev, u8 addr, u8 value) {
     ram_buffer[addr] = value;
-    LOG("RAM[0x%X] << 0x%X (%d)", addr, value, value);
+    if (s_verbose)
+        LOG("RAM[0x%X] << 0x%X (%d) [%c]", addr, value, value, (isprint(value)) ? ((char)value) : '?');
+    else
+        printf("%c", value);
     return err_success();
 }
 

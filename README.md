@@ -19,10 +19,6 @@
 
 </details>
 
-## Usage
-To compile example assembly source file run `make mip8asm args="assets\fibonacci.s fibonacci.bin"`.
-THen run `make mip8vm args="-i fibonacci.bin"` to execute it.
-
 <img src=".github/screenshot.png" />
 
 ## Overview
@@ -68,6 +64,7 @@ Program memory is not connected to the main memory, addressable by **A**.
   - `JUMP` - pop **T** into **IP**.
   - `CMP` - compare two values on the stack.
   - `JZR` - set **IP** to next byte if **Z** is set.
+  - `JNZ` - set **IP** to next byte if **Z** is not set.
   - `JOV` - set **IP** to next byte if **O** is set.
 - Calling subroutines:
   - `CALL` - push **IP** to **RS**, set **IP** to the next byte in memory.

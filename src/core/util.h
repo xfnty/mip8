@@ -61,14 +61,16 @@ typedef arr_t(u8) buffer_t;
 err_t read_file(const char *path, buffer_t *out_buffer);
 err_t write_file(const char *path, const buffer_t *buffer);
 
+void _winvterm_enable_ansi_sequences();
+
 #define LENGTH(array) (sizeof(array)/sizeof(array[0]))
 #define MAX(a, b) ((a > b) ? (a) : (b))
 #define MIN(a, b) ((a < b) ? (a) : (b))
 
-#define LOG(fmt, ...)           printf("\e[0m" fmt "\e[0m\n", ##__VA_ARGS__)
-#define LOG_NOTICE(fmt, ...)    printf("\e[1;97m" fmt "\e[0m\n", ##__VA_ARGS__)
-#define LOG_SUCCESS(fmt, ...)   printf("\e[1;92mok\e[1;97m: " fmt "\e[0m\n", ##__VA_ARGS__)
-#define LOG_ERROR(fmt, ...)     printf("\e[1;91merror\e[1;97m: " fmt "\e[0m\n\tAt %s:%d:%s()\e[0m\n", ##__VA_ARGS__, __FILE__, __LINE__, __func__)
+#define LOG(fmt, ...)           do { _winvterm_enable_ansi_sequences(); printf("\e[0m" fmt "\e[0m\n", ##__VA_ARGS__); } while(0)
+#define LOG_NOTICE(fmt, ...)    do { _winvterm_enable_ansi_sequences(); printf("\e[1;97m" fmt "\e[0m\n", ##__VA_ARGS__); } while(0)
+#define LOG_SUCCESS(fmt, ...)   do { _winvterm_enable_ansi_sequences(); printf("\e[1;92mok\e[1;97m: " fmt "\e[0m\n", ##__VA_ARGS__); } while(0)
+#define LOG_ERROR(fmt, ...)     do { _winvterm_enable_ansi_sequences(); printf("\e[1;91merror\e[1;97m: " fmt "\e[0m\n\tAt %s:%d:%s()\e[0m\n", ##__VA_ARGS__, __FILE__, __LINE__, __func__); } while(0)
 
 #define UNREACHABLE()                                            do { LOG_ERROR("reached unreachable section"); abort(); } while(0)
 #define ASSERT(cond)                                             do { if (!(cond)) { LOG_ERROR("assertion \"%s\" failed", #cond); abort(); } } while(0)

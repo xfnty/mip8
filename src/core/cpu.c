@@ -18,7 +18,8 @@ err_t DROP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t JUMP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t CMP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t JZR(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
-err_t JOV(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
+err_t JNZ(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
+err_t JVF(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t CALL(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t RET(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
 err_t RETI(struct cpu_t *cpu, struct bus_device_slist_node_t *bus);
@@ -47,7 +48,8 @@ extern const struct cpu_opcode_t g_cpu_opcode_table[0x100] = {
     [OP_JUMP]  = { "jmp",   "Copy next byte in program memory into IP",              2, JUMP },
     [OP_CMP]   = { "cmp",   "Compare two values on the stack without removing them", 1, CMP },
     [OP_JZR]   = { "jzr",   "Jump if Zero flag is set",                              2, JZR },
-    [OP_JOV]   = { "jvf",   "Jump if Overflow flag is set",                          2, JOV },
+    [OP_JNZ]   = { "jnz",   "Jump if Zero flag is not set",                          2, JNZ },
+    [OP_JVF]   = { "jvf",   "Jump if Overflow flag is set",                          2, JVF },
     [OP_CALL]  = { "call",  "Push IP to RS then copy next byte into IP",             2, CALL },
     [OP_RET]   = { "ret",   "Pop value from RS into IP then add 2 to IP",            1, RET },
     [OP_RETI]  = { "rti",   "Return from an interrupt",                              1, RETI },
@@ -60,7 +62,7 @@ err_t cpu_load_program_memory_from_file(struct cpu_t *cpu, const char *path) {
     assert(path != NULL);
 
     CHECK_ERR_PROPAGATE(read_file(path, &cpu->program_memory));
-    CHECK_RETURN_VALUE(cpu->program_memory.size > 1, err_format("given rom file is empty"));
+    CHECK_RETURN_VALUE(cpu->program_memory.size > 0, err_format("given rom file is empty"));
     CHECK_RETURN_VALUE(cpu->program_memory.size <= 0x100, err_format("given rom file is too large"));
     arr_resize(cpu->program_memory, 0x100);
 
@@ -282,7 +284,7 @@ err_t JUMP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
 err_t CMP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
     assert(cpu != NULL);
     assert(bus != NULL);
-    CHECK_RETURN_VALUE(cpu->registers.DSS > 1, err_format("not enough values on the stack to compare"));
+    CHECK_RETURN_VALUE(cpu->registers.DSS >= 2, err_format("not enough values on the stack to compare"));
     cpu->registers.F.Z = cpu->registers.DS[cpu->registers.DSS - 1] == cpu->registers.DS[cpu->registers.DSS - 2];
     cpu->registers.IP += g_cpu_opcode_table[OP_CMP].length;
     return err_success();
@@ -291,18 +293,27 @@ err_t CMP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
 err_t JZR(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
     assert(cpu != NULL);
     assert(bus != NULL);
-    if (!cpu->registers.F.Z)
+    if (cpu->registers.F.Z)
         return JUMP(cpu, bus);
     cpu->registers.IP += g_cpu_opcode_table[OP_JZR].length;
     return err_success();
 }
 
-err_t JOV(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
+err_t JNZ(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
+    assert(cpu != NULL);
+    assert(bus != NULL);
+    if (!cpu->registers.F.Z)
+        return JUMP(cpu, bus);
+    cpu->registers.IP += g_cpu_opcode_table[OP_JNZ].length;
+    return err_success();
+}
+
+err_t JVF(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
     assert(cpu != NULL);
     assert(bus != NULL);
     if (cpu->registers.F.O)
         return JUMP(cpu, bus);
-    cpu->registers.IP += g_cpu_opcode_table[OP_JOV].length;
+    cpu->registers.IP += g_cpu_opcode_table[OP_JVF].length;
     return err_success();
 }
 

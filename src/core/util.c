@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <string.h>
+#include <windows.h>
 
 
 void slist_add(struct slist_node_t **head, struct slist_node_t *new_node) {
@@ -76,4 +77,18 @@ err_t _err_format_errno(const char *source, int line, const char *func, const ch
     va_end(args);
 
     return _err_format(source, line, func, "%s: %s [%d]", description_buffer, strerror(errno), errno);
+}
+
+void _winvterm_enable_ansi_sequences() {
+    static bool enabled = false;
+    if (enabled)
+        return;
+
+    HANDLE handleOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    DWORD consoleMode;
+    GetConsoleMode( handleOut , &consoleMode);
+    consoleMode |= 0x0004;
+    consoleMode |= 0x0008;            
+    SetConsoleMode( handleOut , consoleMode );
+    enabled = true;
 }

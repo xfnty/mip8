@@ -32,41 +32,28 @@
 ;   sei  - Set Interrupts Enabled flag.
 ;   cli  - Clear Interrupts Enabled flag.
 
-; Example program: Fibonacci sequence calculator
+
 start:
-    psp $01
-    dup dup dup
-    ; Save IO port address into A
-    psp $00
-    ppa
-    ; Print first two numbers
-    pop 
-    pop
-
-loop:
-    ; Save previous value in A
-    over
-    ppa
-
-    add
+    psp .eof
+    call .print
     
-    ; Jump to .end if the sum is greater than 255
-    jvf .end
-
-    ; Save previous value in stack
-    psa
-
-    ; Output current number
-    psp $00
-    ppa
-    over
-    pop
-    
-    ; Restore previous value in both stack and A
-    ppa
-    psa
-
-    jmp .loop
+    jmp .end
 
 end:
     halt
+
+print:
+    psp $00
+    ppa
+    pop
+    ret
+
+sub:
+    psp $FF
+    xor
+    psp $01
+    add
+    add
+    ret
+
+eof:

@@ -25,12 +25,13 @@ enum cpu_opcode_id_t {
     OP_JUMP  = 0x10,
     OP_CMP   = 0x11,
     OP_JZR   = 0x12,
-    OP_JOV   = 0x13,
-    OP_CALL  = 0x14,
-    OP_RET   = 0x15,
-    OP_RETI  = 0x16,
-    OP_SEI   = 0x17,
-    OP_CLI   = 0x18,
+    OP_JNZ   = 0x13,
+    OP_JVF   = 0x14,
+    OP_CALL  = 0x15,
+    OP_RET   = 0x16,
+    OP_RETI  = 0x17,
+    OP_SEI   = 0x18,
+    OP_CLI   = 0x19,
 };
 
 struct cpu_t {
