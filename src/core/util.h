@@ -61,6 +61,8 @@ typedef arr_t(u8) buffer_t;
 err_t read_file(const char *path, buffer_t *out_buffer);
 err_t write_file(const char *path, const buffer_t *buffer);
 
+bool streql(const char *s1, const char *s2);
+
 void _winvterm_enable_ansi_sequences();
 
 #define LENGTH(array) (sizeof(array)/sizeof(array[0]))

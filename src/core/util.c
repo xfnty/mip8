@@ -56,6 +56,12 @@ err_t write_file(const char *path, const buffer_t *buffer) {
     return err_success();
 }
 
+bool streql(const char *s1, const char *s2) {
+    assert(s1);
+    assert(s2);
+    return strcmp(s1, s2) == 0;
+}
+
 err_t _err_format(const char *source, int line, const char *func, const char *fmt, ...) {
     static char description_buffer[512] = {'\0'};
 

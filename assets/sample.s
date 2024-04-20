@@ -34,9 +34,10 @@
 
 
 start:
-    psp .eof
+    psp $01
+    psp $02
+    call .sub
     call .print
-    
     jmp .end
 
 end:
@@ -55,5 +56,3 @@ sub:
     add
     add
     ret
-
-eof:

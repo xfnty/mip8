@@ -7,6 +7,7 @@
 struct config_t {
     const char *source_filepath;
     const char *output_filepath;
+    bool interactive;
 };
 
 err_t config_parse_args(struct config_t *config, int argc, const char **argv);
