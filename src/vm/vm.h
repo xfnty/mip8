@@ -11,5 +11,6 @@ struct vm_t {
 };
 
 void vm_init(struct vm_t *vm);
+void vm_destroy(struct vm_t *vm);
 
 #endif
