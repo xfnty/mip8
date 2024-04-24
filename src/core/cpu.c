@@ -267,7 +267,7 @@ err_t OVER(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
 err_t DROP(struct cpu_t *cpu, struct bus_device_slist_node_t *bus) {
     assert(cpu != NULL);
     assert(bus != NULL);
-    CHECK_RETURN_VALUE(cpu->registers.DSS > 1, err_format("no values on the stack to DROP"));
+    CHECK_RETURN_VALUE(cpu->registers.DSS >= 1, err_format("no values on the stack to DROP"));
     cpu->registers.DSS--;
     cpu->registers.IP += g_cpu_opcode_table[OP_DROP].length;
     return err_success();
